@@ -9,4 +9,5 @@
   <Include file="..\db\minimap-turtle.lua"/>
   <Include file="..\db\areatrigger-turtle.lua"/>
   <Include file="..\db\meta-turtle.lua"/>
+  <Include file="..\db\quests-xp.lua"/>
 </Ui>

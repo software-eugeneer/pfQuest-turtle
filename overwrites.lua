@@ -451,3 +451,70 @@ do -- quests
   -- Return to Kheyna: Mysterious Glittering Object (Tanaris)
   pfDB["quests"]["data-turtle"][80409]["end"] = { ["O"] = { 3000246 } }
 end
+
+do --add quest log xp reward display options and handle quest log updates
+  local L = pfQuest_Loc
+  local _, _, _, client = GetBuildInfo()
+  client = client or 11200
+  local _G = client == 11200 and getfenv(0) or _G
+  local compat = pfQuestCompat
+
+  table.insert(pfQuest_defconfig, { text = L["Experimental XP Tracking"], default = nil, type = "header" })
+  table.insert(pfQuest_defconfig, { text = L["Show XP Reward On Quest Log"], default = "0", type = "checkbox", config = "questlogxpreward" })
+  pfQuestConfig:ResetConfigFrames(pfQuest_defconfig)
+
+  local pfHookQuestLog_Update = QuestLog_Update
+  QuestLog_Update = function()
+    pfHookQuestLog_Update()
+  
+    if pfQuest_config["questloglevel"] == "1" or pfQuest_config["questlogxpreward"] == "1" then
+      for i=1, QUESTS_DISPLAYED, 1 do
+        local display = i + FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
+        local entries = GetNumQuestLogEntries()
+  
+        if display <= entries then
+          local title, level, tag, header = compat.GetQuestLogTitle(display)
+          if not header then
+            local prefix = ""
+            local postfix = ""
+            if pfQuest_config["questloglevel"] == "1" then
+              prefix = prefix .. " [" .. ( level or "??" ) .. ( tag and "+" or "") .. "] "
+            end
+            if pfQuest_config["questlogxpreward"] == "1" then
+              local qId = pfDatabase:GetQuestIDs(display)
+              if qId and qId[1] and tonumber(qId[1]) and pfQuest.questlog[qId[1]] then
+                postfix = tostring(pfQuest_TWOW_GetQuestRewardById(qId[1], title, level))
+              else
+                postfix = tostring(pfQuest_TWOW_GetQuestRewardById(-1, title, level))
+              end
+            end
+            _G["QuestLogTitle"..i]:SetText(prefix .. postfix .. ' ' .. title)
+          end
+        end
+      end
+    end
+  
+    if pfQuest_config["questlogbuttons"] ==  "1" then
+      local questids = pfDatabase:GetQuestIDs(GetQuestLogSelection())
+      if questids and questids[1] and tonumber(questids[1]) and pfQuest.questlog[questids[1]] then
+        pfQuest.buttonOnline:SetID(questids[1])
+        pfQuest.buttonOnline:Show()
+        pfQuest.buttonLanguage:Show()
+        -- enable buttons
+        pfQuest.buttonShow:Enable()
+        pfQuest.buttonHide:Enable()
+  
+        if pfQuest_config.showids == "1" then
+          pfQuest.buttonOnline.txt:SetText("|cff000000[|cffaa2222id: " .. questids[1] .. "|cff000000]")
+          pfQuest.buttonOnline:SetWidth(pfQuest.buttonOnline.txt:GetStringWidth())
+        end
+      else
+        pfQuest.buttonOnline:Hide()
+        pfQuest.buttonLanguage:Hide()
+        -- disable buttons
+        pfQuest.buttonShow:Disable()
+        pfQuest.buttonHide:Disable()
+      end
+    end
+  end
+end

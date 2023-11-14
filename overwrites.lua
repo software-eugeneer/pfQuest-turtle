@@ -468,6 +468,7 @@ do --add quest log xp reward display options and handle quest log updates
     pfHookQuestLog_Update()
   
     if pfQuest_config["questloglevel"] == "1" or pfQuest_config["questlogxpreward"] == "1" then
+      local pfQuest_turtle_GetQuestRewardById = pfQuest_turtle_GetQuestRewardById
       for i=1, QUESTS_DISPLAYED, 1 do
         local display = i + FauxScrollFrame_GetOffset(QuestLogListScrollFrame)
         local entries = GetNumQuestLogEntries()
@@ -481,12 +482,12 @@ do --add quest log xp reward display options and handle quest log updates
               prefix = prefix .. " [" .. ( level or "??" ) .. ( tag and "+" or "") .. "] "
             end
             if pfQuest_config["questlogxpreward"] == "1" then
-              local qId = pfDatabase:GetQuestIDs(display)
-              if qId and qId[1] and tonumber(qId[1]) and pfQuest.questlog[qId[1]] then
-                postfix = tostring(pfQuest_TWOW_GetQuestRewardById(qId[1], title, level))
-              else
-                postfix = tostring(pfQuest_TWOW_GetQuestRewardById(-1, title, level))
+              local questIDs = pfDatabase:GetQuestIDs(display)
+              local questID = -1
+              if questIDs and questIDs[1] and tonumber(questIDs[1]) and pfQuest.questlog[questIDs[1]] then
+                questID = questIDs[1]
               end
+              postfix = tostring(pfQuest_turtle_GetQuestRewardById(questID, title, level))
             end
             _G["QuestLogTitle"..i]:SetText(prefix .. postfix .. ' ' .. title)
           end

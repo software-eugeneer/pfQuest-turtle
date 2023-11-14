@@ -1,6 +1,3 @@
-local questDB = pfQuest_turtle_quest_xp
-local WAR_MODE_XP_MODIFIER = 1.3
-
 local function ROUND(num, numDecimalPlaces)
   local mult = 10^(numDecimalPlaces or 0)
   return math.floor(num * mult + 0.5) / mult
@@ -29,28 +26,22 @@ local function HasWarMode()
 end
 
 local function GetXpRewardModifiedByCharLevel(qLevel, qExp, cLevel, cWarMode)
-  local preWarModeExp
-  if cLevel <= qLevel +  5 then preWarModeExp = qExp
-  elseif cLevel == qLevel +  6 then preWarModeExp = ROUND(qExp * 0.8 / 5) * 5
-  elseif cLevel == qLevel +  7 then preWarModeExp = ROUND(qExp * 0.6 / 5) * 5
-  elseif cLevel == qLevel +  8 then preWarModeExp = ROUND(qExp * 0.4 / 5) * 5
-  elseif cLevel == qLevel +  9 then preWarModeExp = ROUND(qExp * 0.2 / 5) * 5
-  elseif cLevel >= qLevel +  10 then preWarModeExp = ROUND(qExp * 0.1 / 5) * 5
-  else
-    DEFAULT_CHAT_FRAME:AddMessage('Someting went wrong while calculating XP: [qLevel=' .. tostring(qLevel)  .. ', qExp=' .. tostring(qExp) .. ', cLevel=' .. tostring(cLevel) .. ', cWarMode=' .. tostring(cWarMode) .. ']')
-  end
+  local WAR_MODE_XP_MODIFIER = 1.3
+  local QUEST_DECAY_LEVEL_GAP = 24
+  if cLevel >= qLevel + QUEST_DECAY_LEVEL_GAP then qExp = 0 end
 
   if cWarMode == true then
-    return preWarModeExp * WAR_MODE_XP_MODIFIER
+    return qExp * WAR_MODE_XP_MODIFIER
   end
 
-  return preWarModeExp
+  return qExp
 end
 
 local function GetQuestReward(qId, qTitle, qLevel)
   local cLevel = UnitLevel('player')
 
   if cLevel < 60 then
+    local questDB = pfQuest_turtle_quest_xp
     local candidate = questDB[qId]
     local rawXP = 0
     local hasWarMode = HasWarMode()
@@ -75,6 +66,6 @@ local function GetQuestReward(qId, qTitle, qLevel)
   end
 end
 
-function pfQuest_TWOW_GetQuestRewardById(qId, qTitle, qLevel)
+function pfQuest_turtle_GetQuestRewardById(qId, qTitle, qLevel)
   return GetQuestReward(qId, qTitle, qLevel)
 end
